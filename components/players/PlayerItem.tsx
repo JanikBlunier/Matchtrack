@@ -1,8 +1,18 @@
 'use client'
 
-import { Player } from "@/constants/players";
+export type PlayerDTO = {
+    id: string
+    teamId: string
+    firstName: string
+    lastName: string
+    number: number
+    position?: string
+    isActive: boolean
+}
 
-export default function PlayerItem({ player }: { player: Player }) {
+export default function PlayerItem({ player }: { player: PlayerDTO }) {
+    const fullName = `${player.firstName} ${player.lastName}`
+
     return (
         <button
             type="button"
@@ -17,10 +27,10 @@ export default function PlayerItem({ player }: { player: Player }) {
 
                 <div className="min-w-0 flex-1">
                     <div className="font-semibold text-gray-900 truncate text-sm md:text-base">
-                        {player.name}
+                        {fullName}
                     </div>
                     <div className="text-xs md:text-sm text-gray-500 truncate">
-                        {player.position}
+                        {player.position || "—"}
                     </div>
                 </div>
             </div>
