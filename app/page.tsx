@@ -1,11 +1,11 @@
 import SpielerlistePage from "@/app/Spielerliste/page";
+import TimerPage from "@/app/Timer/page";
 
 export default function Home() {
   return (
     <>
-        <h1>Home</h1>
         <div>
-            <p>counter</p>
+            <TimerPage/>
         </div>
 
         <div>
