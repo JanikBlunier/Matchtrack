@@ -1,6 +1,7 @@
 import SpielerlistePage from "@/app/Spielerliste/page";
 import TimerPage from "@/app/Timer/page";
 import MatchPage from "@/app/match/page";
+import TimelinePage from "@/app/Timeline/page";
 
 export default function Home() {
   return (
@@ -14,7 +15,7 @@ export default function Home() {
         </div>
 
         <div>
-            <p>Spielverlauf</p>
+            <TimelinePage/>
         </div>
 
         <div>
