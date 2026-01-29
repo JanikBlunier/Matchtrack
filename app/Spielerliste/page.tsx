@@ -1,9 +1,5 @@
-import PlayerList from "@/components/players/PlayerList";
+import PlayerEventsServer from "@/components/playerEvents/PlayerEvents.server"
 
 export default function SpielerlistePage() {
-    return(
-        <div>
-            <PlayerList/>
-        </div>
-    )
+    return <PlayerEventsServer />
 }
