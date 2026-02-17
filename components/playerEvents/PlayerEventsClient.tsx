@@ -14,20 +14,64 @@ export default function PlayerEventsClient({
 }) {
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerDTO | null>(null)
 
+    const [isSubMode, setIsSubMode] = useState(false)
+    const [subInPlayer, setSubInPlayer] = useState<PlayerDTO | null>(null)
+
     const playerName = useMemo(() => {
         if (!selectedPlayer) return ""
         return `${selectedPlayer.firstName} ${selectedPlayer.lastName}`
     }, [selectedPlayer])
 
-    function reset() {
+    function resetAll() {
         setSelectedPlayer(null)
+        setIsSubMode(false)
+        setSubInPlayer(null)
+    }
+
+    function backToActions() {
+        setIsSubMode(false)
+        setSubInPlayer(null)
     }
 
     function handleEvent(type: EventType) {
-        // TODO später: API Call (playerId, type, minute)
-        console.log("EVENT:", type, selectedPlayer)
+        if (!selectedPlayer) return
 
-        reset()
+        if (type === "SUB") {
+            setIsSubMode(true)
+            return
+        }
+
+        console.log("EVENT:", type, { playerOut: selectedPlayer })
+
+        resetAll()
+    }
+
+    const teamPlayers = useMemo(() => {
+        if (!selectedPlayer) return []
+        const all = [...homePlayers, ...awayPlayers]
+        return all.filter(p => p.teamId === selectedPlayer.teamId)
+    }, [selectedPlayer, homePlayers, awayPlayers])
+
+    const substitutes = useMemo(() => {
+        if (!selectedPlayer) return []
+
+        const subs = teamPlayers.filter(p => p.id !== selectedPlayer.id && p.isActive === false)
+
+        return subs
+    }, [teamPlayers, selectedPlayer])
+
+    function confirmSub(playerIn: PlayerDTO) {
+        if (!selectedPlayer) return
+
+        setSubInPlayer(playerIn)
+
+        // TODO später: API Call mit OUT + IN
+        console.log("SUB EVENT:", {
+            playerOut: selectedPlayer,
+            playerIn,
+        })
+
+        resetAll()
     }
 
     return (
@@ -39,11 +83,7 @@ export default function PlayerEventsClient({
                         <h2 className="text-lg md:text-xl font-bold mb-4 px-2">Home</h2>
                         <div className="flex flex-col gap-3">
                             {homePlayers.map((p) => (
-                                <PlayerItem
-                                    key={p.id}
-                                    player={p}
-                                    onSelect={setSelectedPlayer}
-                                />
+                                <PlayerItem key={p.id} player={p} onSelect={setSelectedPlayer} />
                             ))}
                         </div>
                     </div>
@@ -54,11 +94,7 @@ export default function PlayerEventsClient({
                         </h2>
                         <div className="flex flex-col gap-3">
                             {awayPlayers.map((p) => (
-                                <PlayerItem
-                                    key={p.id}
-                                    player={p}
-                                    onSelect={setSelectedPlayer}
-                                />
+                                <PlayerItem key={p.id} player={p} onSelect={setSelectedPlayer} />
                             ))}
                         </div>
                     </div>
@@ -66,7 +102,7 @@ export default function PlayerEventsClient({
             )}
 
             {/* ACTION SHEET */}
-            {selectedPlayer && (
+            {selectedPlayer && !isSubMode && (
                 <div className="max-w-sm mx-auto rounded-2xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden">
                     <div className="flex items-center gap-3 px-4 py-3 border-b">
                         <div className="h-10 w-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold">
@@ -78,7 +114,7 @@ export default function PlayerEventsClient({
                             <div className="text-sm text-gray-500">Aktion auswählen</div>
                         </div>
 
-                        <button onClick={reset} className="text-xl text-gray-500">×</button>
+                        <button onClick={resetAll} className="text-xl text-gray-500">×</button>
                     </div>
 
                     <div className="p-4 grid grid-cols-2 gap-3">
@@ -89,11 +125,52 @@ export default function PlayerEventsClient({
                     </div>
 
                     <button
-                        onClick={reset}
+                        onClick={resetAll}
                         className="w-full py-3 bg-gray-100 hover:bg-gray-200 font-medium"
                     >
                         Abbrechen
                     </button>
+                </div>
+            )}
+
+            {/* SUBSTITUTES PANEL */}
+            {selectedPlayer && isSubMode && (
+                <div className="max-w-sm mx-auto rounded-2xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden">
+                    <div className="flex items-center gap-3 px-4 py-3 border-b">
+                        <div className="h-10 w-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold">
+                            {selectedPlayer.number}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <div className="font-semibold truncate">Auswechslung</div>
+                            <div className="text-sm text-gray-500 truncate">
+                                Raus: {playerName} · Rein wählen
+                            </div>
+                        </div>
+
+                        <button onClick={resetAll} className="text-xl text-gray-500">×</button>
+                    </div>
+
+                    <div className="p-4">
+                        {substitutes.length === 0 ? (
+                            <div className="py-6 text-center text-sm text-gray-500">
+                                Kein Ersatzspieler gefunden
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                {substitutes.map((p) => (
+                                    <PlayerItem key={p.id} player={p} onSelect={confirmSub} />
+                                ))}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={backToActions}
+                            className="mt-4 w-full py-3 rounded-xl bg-gray-100 hover:bg-gray-200 font-medium"
+                        >
+                            Zurück
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
