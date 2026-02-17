@@ -1,38 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { MatchEventsProvider } from "@/components/match/events/MatchEventsContext";
 
 export const metadata: Metadata = {
-  title: "Match Track",
-  description: "Track your match history",
+    title: "Match Track",
+    description: "Track your match history",
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-      <main className="pb-20">
-        {children}
-      </main>
-        <Nav />
-      </body>
-    </html>
-  );
+                                       children,
+                                   }: {
+    children: React.ReactNode;
+}) {
+    return (
+        <html lang="en">
+        <body>
+        <MatchEventsProvider>
+            <main className="pb-20">{children}</main>
+            <Nav />
+        </MatchEventsProvider>
+        </body>
+        </html>
+    );
 }
