@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import PlayerItem, { PlayerDTO } from "@/components/players/PlayerItem";
 import { useMatchEvents } from "@/components/match/events/MatchEventsContext";
+import { useGameTimerContext } from "@/components/match/timer/GameTimerContext";
 
 type EventType = "GOAL" | "YELLOW" | "RED" | "SUB";
 
@@ -14,6 +15,7 @@ export default function PlayerEventsClient({
     awayPlayers: PlayerDTO[];
 }) {
     const { addEvent } = useMatchEvents();
+    const { minuteNow } = useGameTimerContext();
 
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerDTO | null>(null);
     const [isSubMode, setIsSubMode] = useState(false);
@@ -49,11 +51,11 @@ export default function PlayerEventsClient({
             return;
         }
 
-        const minuteNow = 0; // TODO später Timer anschließen
         const side = getSide(selectedPlayer.teamId);
+        const minute = minuteNow;
 
         addEvent({
-            minute: minuteNow,
+            minute,
             team: side,
             type: type.toLowerCase() as "goal" | "yellow" | "red",
             player: fullName(selectedPlayer),
@@ -65,11 +67,11 @@ export default function PlayerEventsClient({
     function confirmSub(playerIn: PlayerDTO) {
         if (!selectedPlayer) return;
 
-        const minuteNow = 0; // TODO später Timer anschließen
         const side = getSide(selectedPlayer.teamId);
+        const minute = minuteNow;
 
         addEvent({
-            minute: minuteNow,
+            minute,
             team: side,
             type: "sub",
             outPlayer: fullName(selectedPlayer),
@@ -137,15 +139,10 @@ export default function PlayerEventsClient({
 
                         <div className="flex-1 min-w-0">
                             <div className="font-semibold truncate">{playerName}</div>
-                            <div className="text-sm text-gray-500">
-                                Aktion auswählen
-                            </div>
+                            <div className="text-sm text-gray-500">Aktion auswählen</div>
                         </div>
 
-                        <button
-                            onClick={resetAll}
-                            className="text-xl text-gray-500"
-                        >
+                        <button onClick={resetAll} className="text-xl text-gray-500">
                             ×
                         </button>
                     </div>
@@ -195,18 +192,13 @@ export default function PlayerEventsClient({
                         </div>
 
                         <div className="flex-1 min-w-0">
-                            <div className="font-semibold truncate">
-                                Auswechslung
-                            </div>
+                            <div className="font-semibold truncate">Auswechslung</div>
                             <div className="text-sm text-gray-500 truncate">
                                 Raus: {playerName} · Rein wählen
                             </div>
                         </div>
 
-                        <button
-                            onClick={resetAll}
-                            className="text-xl text-gray-500"
-                        >
+                        <button onClick={resetAll} className="text-xl text-gray-500">
                             ×
                         </button>
                     </div>

@@ -95,6 +95,10 @@ export function useGameTimer(options: Options = {}) {
         [mainDisplaySeconds]
     );
 
+    const displayMinute = useMemo(() => {
+        return Math.floor(mainDisplaySeconds / 60) + 1;
+    }, [mainDisplaySeconds]);
+
     const extraSeconds = Math.max(0, seconds - cap);
     const showExtra = running && extraSeconds > 0;
     const extraFormatted = useMemo(
@@ -105,8 +109,8 @@ export function useGameTimer(options: Options = {}) {
     return {
         half,
         running,
-
         mainFormatted,
+        displayMinute,
         showExtra,
         extraFormatted,
 

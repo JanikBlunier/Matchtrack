@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useGameTimer } from "./useGameTimer";
+import { useGameTimerContext } from "@/components/match/timer/GameTimerContext";
 
 export default function TimerPage() {
     const {
@@ -15,7 +15,7 @@ export default function TimerPage() {
         setTime,
         startLabel,
         pauseLabel,
-    } = useGameTimer({ halfMinutes: 45 });
+    } = useGameTimerContext();
 
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [showHeader, setShowHeader] = useState(false);
@@ -91,17 +91,11 @@ export default function TimerPage() {
 
                     <div className="mt-5 flex gap-3">
                         {!running ? (
-                            <button
-                                onClick={start}
-                                className="px-5 py-2 rounded-lg bg-black text-white"
-                            >
+                            <button onClick={start} className="px-5 py-2 rounded-lg bg-black text-white">
                                 {startLabel}
                             </button>
                         ) : (
-                            <button
-                                onClick={pause}
-                                className="px-5 py-2 rounded-lg bg-gray-200"
-                            >
+                            <button onClick={pause} className="px-5 py-2 rounded-lg bg-gray-200">
                                 {pauseLabel}
                             </button>
                         )}
@@ -115,16 +109,10 @@ export default function TimerPage() {
                     </div>
 
                     <div className="mt-6 flex gap-2 text-xs">
-                        <button
-                            onClick={() => setTime(44, 50)}
-                            className="px-3 py-1 rounded border"
-                        >
+                        <button onClick={() => setTime(44, 50)} className="px-3 py-1 rounded border">
                             Dev: 44:50
                         </button>
-                        <button
-                            onClick={() => setTime(89, 50)}
-                            className="px-3 py-1 rounded border"
-                        >
+                        <button onClick={() => setTime(89, 50)} className="px-3 py-1 rounded border">
                             Dev: 89:50
                         </button>
                     </div>
@@ -135,15 +123,10 @@ export default function TimerPage() {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-sm flex flex-col gap-4">
                         <div className="text-lg font-semibold">Spielzeit zurücksetzen?</div>
-                        <div className="text-sm text-gray-600">
-                            Die aktuelle Spielzeit geht verloren.
-                        </div>
+                        <div className="text-sm text-gray-600">Die aktuelle Spielzeit geht verloren.</div>
 
                         <div className="flex gap-2 justify-end">
-                            <button
-                                onClick={() => setConfirmOpen(false)}
-                                className="px-4 py-2 rounded-lg border"
-                            >
+                            <button onClick={() => setConfirmOpen(false)} className="px-4 py-2 rounded-lg border">
                                 Abbrechen
                             </button>
                             <button
