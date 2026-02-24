@@ -40,8 +40,14 @@ function reducer(state: State, action: Action): State {
     }
 }
 
+type Score = {
+    home: number;
+    away: number;
+};
+
 type Ctx = {
     events: MatchEvent[];
+    score: Score;
     addEvent: (evt: Omit<MatchEvent, "id">) => void;
     clearEvents: () => void;
 };
@@ -52,16 +58,28 @@ function uid() {
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export function MatchEventsProvider({
-                                        children,
-                                    }: {
-    children: React.ReactNode;
-}) {
+function calculateScore(events: MatchEvent[]): Score {
+    let home = 0;
+    let away = 0;
+
+    for (const e of events) {
+        if (e.type !== "goal") continue;
+        if (e.team === "home") home++;
+        if (e.team === "away") away++;
+    }
+
+    return { home, away };
+}
+
+export function MatchEventsProvider({ children }: { children: React.ReactNode }) {
     const [state, dispatch] = useReducer(reducer, { events: [] });
+
+    const score = useMemo(() => calculateScore(state.events), [state.events]);
 
     const value = useMemo<Ctx>(() => {
         return {
             events: state.events,
+            score,
             addEvent: (evt) =>
                 dispatch({
                     type: "ADD_EVENT",
@@ -69,7 +87,7 @@ export function MatchEventsProvider({
                 }),
             clearEvents: () => dispatch({ type: "CLEAR_EVENTS" }),
         };
-    }, [state.events]);
+    }, [state.events, score]);
 
     return (
         <MatchEventsContext.Provider value={value}>
@@ -80,9 +98,6 @@ export function MatchEventsProvider({
 
 export function useMatchEvents() {
     const ctx = useContext(MatchEventsContext);
-    if (!ctx)
-        throw new Error(
-            "useMatchEvents must be used within MatchEventsProvider"
-        );
+    if (!ctx) throw new Error("useMatchEvents must be used within MatchEventsProvider");
     return ctx;
 }

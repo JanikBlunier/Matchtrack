@@ -1,3 +1,5 @@
+import React from "react";
+
 type ScoreboardProps = {
     homeName: string;
     awayName: string;
@@ -19,15 +21,15 @@ export default function Scoreboard({
                 </p>
 
                 <div className="mt-4 flex items-end justify-center gap-6">
-          <span className="text-5xl font-semibold tabular-nums text-gray-900">
-            {homeScore}
-          </span>
+                    <span className="text-5xl font-semibold tabular-nums text-gray-900">
+                        {homeScore}
+                    </span>
 
                     <span className="pb-1 text-2xl font-light text-gray-300">:</span>
 
                     <span className="text-5xl font-semibold tabular-nums text-gray-900">
-            {awayScore}
-          </span>
+                        {awayScore}
+                    </span>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2">
