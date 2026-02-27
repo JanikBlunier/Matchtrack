@@ -20,8 +20,13 @@ export function GameTimerProvider({
     const timer = useGameTimer({ halfMinutes });
 
     const [mmStr, ssStr] = timer.mainFormatted.split(":");
-    const minuteNow = Number(mmStr || "0");
+    const rawMinute = Number(mmStr || "0");
     const secondNow = Number(ssStr || "0");
+
+    const minuteNow =
+        rawMinute === 0 && secondNow === 0
+            ? 0
+            : rawMinute + 1;
 
     const value: Ctx = {
         ...timer,
