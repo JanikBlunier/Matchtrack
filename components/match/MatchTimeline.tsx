@@ -30,7 +30,7 @@ export default function MatchTimeline({ events }: MatchTimelineProps) {
                                 </div>
 
                                 <div className="mx-4 flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 text-xs font-semibold text-white">
-                                    {event.minute}'
+                                    {event.minute}
                                 </div>
 
                                 <div className="flex justify-start">
