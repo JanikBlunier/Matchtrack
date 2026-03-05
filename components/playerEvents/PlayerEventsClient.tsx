@@ -29,16 +29,14 @@ export default function PlayerEventsClient({
         const sent = new Set<string>();
 
         for (const e of events) {
-            if (e.type === "red" && e.player) {
-                sent.add(e.player);
-            }
+            if (e.type === "red" && e.player) sent.add(e.player);
+
             if (e.type === "yellow" && e.player) {
                 const next = (yellowCount.get(e.player) ?? 0) + 1;
                 yellowCount.set(e.player, next);
                 if (next >= 2) sent.add(e.player);
             }
         }
-
         return sent;
     }, [events]);
 
@@ -68,8 +66,12 @@ export default function PlayerEventsClient({
     function handleEvent(type: EventType) {
         if (!selectedPlayer) return;
 
-        if (sentOffNames.has(fullName(selectedPlayer))) {
+        if (isSentOff(selectedPlayer)) {
             resetAll();
+            return;
+        }
+
+        if (type === "GOAL" && selectedPlayer.isActive === false) {
             return;
         }
 
@@ -94,13 +96,14 @@ export default function PlayerEventsClient({
     function confirmSub(playerIn: PlayerDTO) {
         if (!selectedPlayer) return;
 
-        if (sentOffNames.has(fullName(selectedPlayer))) {
+        if (isSentOff(selectedPlayer)) {
             resetAll();
             return;
         }
-        if (sentOffNames.has(fullName(playerIn))) {
-            return;
-        }
+
+        if (playerIn.isActive !== false) return;
+
+        if (isSentOff(playerIn)) return;
 
         const side = getSide(selectedPlayer.teamId);
         const minute = minuteNow;
@@ -116,6 +119,24 @@ export default function PlayerEventsClient({
         resetAll();
     }
 
+    const homeActive = useMemo(
+        () => homePlayers.filter((p) => p.isActive),
+        [homePlayers]
+    );
+    const homeBench = useMemo(
+        () => homePlayers.filter((p) => !p.isActive),
+        [homePlayers]
+    );
+
+    const awayActive = useMemo(
+        () => awayPlayers.filter((p) => p.isActive),
+        [awayPlayers]
+    );
+    const awayBench = useMemo(
+        () => awayPlayers.filter((p) => !p.isActive),
+        [awayPlayers]
+    );
+
     const teamPlayers = useMemo(() => {
         if (!selectedPlayer) return [];
         const all = [...homePlayers, ...awayPlayers];
@@ -125,18 +146,22 @@ export default function PlayerEventsClient({
     const substitutes = useMemo(() => {
         if (!selectedPlayer) return [];
         return teamPlayers.filter(
-            (p) => p.id !== selectedPlayer.id && p.isActive === false
+            (p) => p.id !== selectedPlayer.id && p.isActive === false && !isSentOff(p)
         );
-    }, [teamPlayers, selectedPlayer]);
+    }, [teamPlayers, selectedPlayer, sentOffNames]);
+
+    const goalDisabled = !!selectedPlayer && selectedPlayer.isActive === false;
 
     return (
         <div className="px-2 md:px-4 py-6">
+            {/* SPIELERLISTE */}
             {!selectedPlayer && (
                 <div className="grid grid-cols-2 gap-4 md:gap-8">
                     <div>
                         <h2 className="text-lg md:text-xl font-bold mb-4 px-2">Home</h2>
+
                         <div className="flex flex-col gap-3">
-                            {homePlayers.map((p) => (
+                            {homeActive.map((p) => (
                                 <PlayerItem
                                     key={p.id}
                                     player={p}
@@ -148,14 +173,38 @@ export default function PlayerEventsClient({
                                 />
                             ))}
                         </div>
+
+                        {homeBench.length > 0 && (
+                            <>
+                                <div className="mt-5 mb-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                    Ersatz
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    {homeBench.map((p) => (
+                                        <PlayerItem
+                                            key={p.id}
+                                            player={p}
+                                            // Bankspieler bleiben anwählbar (z.B. Karten), aber:
+                                            // wenn du sie komplett nicht anklickbar willst => disabled: true
+                                            disabled={isSentOff(p)}
+                                            onSelect={(pl) => {
+                                                if (isSentOff(pl)) return;
+                                                setSelectedPlayer(pl);
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div>
                         <h2 className="text-lg md:text-xl font-bold mb-4 px-2 text-right">
                             Away
                         </h2>
+
                         <div className="flex flex-col gap-3">
-                            {awayPlayers.map((p) => (
+                            {awayActive.map((p) => (
                                 <PlayerItem
                                     key={p.id}
                                     player={p}
@@ -167,6 +216,27 @@ export default function PlayerEventsClient({
                                 />
                             ))}
                         </div>
+
+                        {awayBench.length > 0 && (
+                            <>
+                                <div className="mt-5 mb-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+                                    Ersatz
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    {awayBench.map((p) => (
+                                        <PlayerItem
+                                            key={p.id}
+                                            player={p}
+                                            disabled={isSentOff(p)}
+                                            onSelect={(pl) => {
+                                                if (isSentOff(pl)) return;
+                                                setSelectedPlayer(pl);
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -189,10 +259,31 @@ export default function PlayerEventsClient({
                     </div>
 
                     <div className="p-4 grid grid-cols-2 gap-3">
-                        <Action label="Tor" icon="⚽" tone="green" onClick={() => handleEvent("GOAL")} />
-                        <Action label="Gelbe Karte" icon="🟨" tone="yellow" onClick={() => handleEvent("YELLOW")} />
-                        <Action label="Rote Karte" icon="🟥" tone="red" onClick={() => handleEvent("RED")} />
-                        <Action label="Auswechslung" icon="🔁" tone="blue" onClick={() => handleEvent("SUB")} />
+                        <Action
+                            label="Tor"
+                            icon="⚽"
+                            tone="green"
+                            disabled={goalDisabled}
+                            onClick={() => handleEvent("GOAL")}
+                        />
+                        <Action
+                            label="Gelbe Karte"
+                            icon="🟨"
+                            tone="yellow"
+                            onClick={() => handleEvent("YELLOW")}
+                        />
+                        <Action
+                            label="Rote Karte"
+                            icon="🟥"
+                            tone="red"
+                            onClick={() => handleEvent("RED")}
+                        />
+                        <Action
+                            label="Auswechslung"
+                            icon="🔁"
+                            tone="blue"
+                            onClick={() => handleEvent("SUB")}
+                        />
                     </div>
 
                     <button
@@ -234,11 +325,8 @@ export default function PlayerEventsClient({
                                     <PlayerItem
                                         key={p.id}
                                         player={p}
-                                        disabled={isSentOff(p)}
-                                        onSelect={(pl) => {
-                                            if (isSentOff(pl)) return;
-                                            confirmSub(pl);
-                                        }}
+                                        disabled={false}
+                                        onSelect={confirmSub}
                                     />
                                 ))}
                             </div>
@@ -262,11 +350,13 @@ function Action({
                     icon,
                     tone,
                     onClick,
+                    disabled = false,
                 }: {
     label: string;
     icon: string;
     tone: "green" | "yellow" | "red" | "blue";
     onClick: () => void;
+    disabled?: boolean;
 }) {
     const map = {
         green: "bg-green-50 ring-green-200",
@@ -277,8 +367,17 @@ function Action({
 
     return (
         <button
-            onClick={onClick}
-            className={`h-24 rounded-xl ring-1 flex flex-col items-center justify-center gap-2 ${map[tone]}`}
+            onClick={() => {
+                if (disabled) return;
+                onClick();
+            }}
+            disabled={disabled}
+            className={[
+                "h-24 rounded-xl ring-1 flex flex-col items-center justify-center gap-2",
+                map[tone],
+                disabled ? "opacity-40 cursor-not-allowed" : "",
+            ].join(" ")}
+            title={disabled ? "Ersatzspieler können kein Tor erzielen" : undefined}
         >
             <div className="text-2xl">{icon}</div>
             <div className="text-sm font-medium">{label}</div>
