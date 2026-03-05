@@ -14,11 +14,38 @@ export default function PlayerEventsClient({
     homePlayers: PlayerDTO[];
     awayPlayers: PlayerDTO[];
 }) {
-    const { addEvent } = useMatchEvents();
+    const { addEvent, events } = useMatchEvents();
     const { minuteNow } = useGameTimerContext();
 
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerDTO | null>(null);
     const [isSubMode, setIsSubMode] = useState(false);
+
+    function fullName(p: PlayerDTO) {
+        return `${p.firstName} ${p.lastName}`;
+    }
+
+    // Spieler gesperrt wenn: ROT oder 2x GELB
+    const sentOffNames = useMemo(() => {
+        const yellowCount = new Map<string, number>();
+        const sent = new Set<string>();
+
+        for (const e of events) {
+            if (e.type === "red" && e.player) {
+                sent.add(e.player);
+            }
+            if (e.type === "yellow" && e.player) {
+                const next = (yellowCount.get(e.player) ?? 0) + 1;
+                yellowCount.set(e.player, next);
+                if (next >= 2) sent.add(e.player);
+            }
+        }
+
+        return sent;
+    }, [events]);
+
+    function isSentOff(p: PlayerDTO) {
+        return sentOffNames.has(fullName(p));
+    }
 
     const playerName = useMemo(() => {
         if (!selectedPlayer) return "";
@@ -34,10 +61,6 @@ export default function PlayerEventsClient({
         setIsSubMode(false);
     }
 
-    function fullName(p: PlayerDTO) {
-        return `${p.firstName} ${p.lastName}`;
-    }
-
     function getSide(teamId: string): "home" | "away" {
         const homeId = homePlayers[0]?.teamId;
         return teamId === homeId ? "home" : "away";
@@ -45,6 +68,12 @@ export default function PlayerEventsClient({
 
     function handleEvent(type: EventType) {
         if (!selectedPlayer) return;
+
+        // Extra-Sicherheit: wenn Spieler gesperrt ist, nix erlauben
+        if (sentOffNames.has(fullName(selectedPlayer))) {
+            resetAll();
+            return;
+        }
 
         if (type === "SUB") {
             setIsSubMode(true);
@@ -66,6 +95,15 @@ export default function PlayerEventsClient({
 
     function confirmSub(playerIn: PlayerDTO) {
         if (!selectedPlayer) return;
+
+        // raus Spieler darf nicht gesperrt sein (sinnvoll) und rein Spieler ebenfalls nicht
+        if (sentOffNames.has(fullName(selectedPlayer))) {
+            resetAll();
+            return;
+        }
+        if (sentOffNames.has(fullName(playerIn))) {
+            return;
+        }
 
         const side = getSide(selectedPlayer.teamId);
         const minute = minuteNow;
@@ -106,7 +144,11 @@ export default function PlayerEventsClient({
                                 <PlayerItem
                                     key={p.id}
                                     player={p}
-                                    onSelect={setSelectedPlayer}
+                                    disabled={isSentOff(p)}
+                                    onSelect={(pl) => {
+                                        if (isSentOff(pl)) return;
+                                        setSelectedPlayer(pl);
+                                    }}
                                 />
                             ))}
                         </div>
@@ -121,7 +163,11 @@ export default function PlayerEventsClient({
                                 <PlayerItem
                                     key={p.id}
                                     player={p}
-                                    onSelect={setSelectedPlayer}
+                                    disabled={isSentOff(p)}
+                                    onSelect={(pl) => {
+                                        if (isSentOff(pl)) return;
+                                        setSelectedPlayer(pl);
+                                    }}
                                 />
                             ))}
                         </div>
@@ -148,30 +194,10 @@ export default function PlayerEventsClient({
                     </div>
 
                     <div className="p-4 grid grid-cols-2 gap-3">
-                        <Action
-                            label="Tor"
-                            icon="⚽"
-                            tone="green"
-                            onClick={() => handleEvent("GOAL")}
-                        />
-                        <Action
-                            label="Gelbe Karte"
-                            icon="🟨"
-                            tone="yellow"
-                            onClick={() => handleEvent("YELLOW")}
-                        />
-                        <Action
-                            label="Rote Karte"
-                            icon="🟥"
-                            tone="red"
-                            onClick={() => handleEvent("RED")}
-                        />
-                        <Action
-                            label="Auswechslung"
-                            icon="🔁"
-                            tone="blue"
-                            onClick={() => handleEvent("SUB")}
-                        />
+                        <Action label="Tor" icon="⚽" tone="green" onClick={() => handleEvent("GOAL")} />
+                        <Action label="Gelbe Karte" icon="🟨" tone="yellow" onClick={() => handleEvent("YELLOW")} />
+                        <Action label="Rote Karte" icon="🟥" tone="red" onClick={() => handleEvent("RED")} />
+                        <Action label="Auswechslung" icon="🔁" tone="blue" onClick={() => handleEvent("SUB")} />
                     </div>
 
                     <button
@@ -214,7 +240,11 @@ export default function PlayerEventsClient({
                                     <PlayerItem
                                         key={p.id}
                                         player={p}
-                                        onSelect={confirmSub}
+                                        disabled={isSentOff(p)}
+                                        onSelect={(pl) => {
+                                            if (isSentOff(pl)) return;
+                                            confirmSub(pl);
+                                        }}
                                     />
                                 ))}
                             </div>

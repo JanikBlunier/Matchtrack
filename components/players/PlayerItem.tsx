@@ -13,19 +13,34 @@ export type PlayerDTO = {
 type Props = {
     player: PlayerDTO
     onSelect: (player: PlayerDTO) => void
+    disabled?: boolean
 }
 
-export default function PlayerItem({ player, onSelect }: Props) {
+export default function PlayerItem({ player, onSelect, disabled = false }: Props) {
     const fullName = `${player.firstName} ${player.lastName}`
 
     return (
         <button
             type="button"
-            onClick={() => onSelect(player)}
-            className="w-full rounded-xl border border-gray-200 bg-white p-2 md:px-4 md:py-3 text-left shadow-sm transition hover:bg-gray-50 active:scale-[0.99] min-w-0"
+            disabled={disabled}
+            onClick={() => {
+                if (disabled) return
+                onSelect(player)
+            }}
+            className={[
+                "w-full rounded-xl border p-2 md:px-4 md:py-3 text-left shadow-sm transition min-w-0",
+                disabled
+                    ? "border-gray-200 bg-gray-50 opacity-40 cursor-not-allowed"
+                    : "border-gray-200 bg-white hover:bg-gray-50 active:scale-[0.99]",
+            ].join(" ")}
         >
             <div className="flex items-center gap-2 md:gap-4 min-w-0">
-                <div className="flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs md:text-sm font-semibold text-white">
+                <div
+                    className={[
+                        "flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-full text-xs md:text-sm font-semibold",
+                        disabled ? "bg-gray-400 text-white" : "bg-gray-900 text-white",
+                    ].join(" ")}
+                >
                     {player.number}
                 </div>
 
