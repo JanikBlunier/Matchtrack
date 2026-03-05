@@ -5,6 +5,17 @@ export function playerHasRed(player: string | undefined, events: MatchEvent[]) {
     return events.some((e) => e.type === "red" && e.player === player);
 }
 
+export function playerHasTwoYellows(player: string | undefined, events: MatchEvent[]) {
+    if (!player) return false;
+    const yellows = events.filter((e) => e.type === "yellow" && e.player === player).length;
+    return yellows >= 2;
+}
+
+export function playerIsSentOff(player: string | undefined, events: MatchEvent[]) {
+    if (!player) return false;
+    return playerHasRed(player, events) || playerHasTwoYellows(player, events);
+}
+
 export function isPlayerOnField(player: string | undefined, events: MatchEvent[]) {
     if (!player) return true;
 
@@ -27,7 +38,7 @@ export function canAddPlayerEvent(
 ) {
     if (!player) return true;
 
-    if (playerHasRed(player, events)) return false;
+    if (playerIsSentOff(player, events)) return false;
 
     if (eventType === "goal") {
         return isPlayerOnField(player, events);

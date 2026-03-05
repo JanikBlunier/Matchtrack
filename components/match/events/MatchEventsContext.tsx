@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useMemo, useReducer } from "react";
-import { canAddPlayerEvent } from "@/lib/matchRules"; // ✅ NEU
+import { canAddPlayerEvent } from "@/lib/matchRules";
 
 export type EventType = "goal" | "yellow" | "red" | "sub";
 
@@ -29,10 +29,9 @@ function reducer(state: State, action: Action): State {
         case "ADD_EVENT": {
             const next = action.payload;
 
-            // ✅ NEU: Regeln anwenden (nur goal/yellow/red haben player)
             if (next.type !== "sub") {
                 const ok = canAddPlayerEvent(next.type, next.player, state.events);
-                if (!ok) return state; // blockieren
+                if (!ok) return state;
             }
 
             return {
