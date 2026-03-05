@@ -24,7 +24,6 @@ export default function PlayerEventsClient({
         return `${p.firstName} ${p.lastName}`;
     }
 
-    // Spieler gesperrt wenn: ROT oder 2x GELB
     const sentOffNames = useMemo(() => {
         const yellowCount = new Map<string, number>();
         const sent = new Set<string>();
@@ -69,7 +68,6 @@ export default function PlayerEventsClient({
     function handleEvent(type: EventType) {
         if (!selectedPlayer) return;
 
-        // Extra-Sicherheit: wenn Spieler gesperrt ist, nix erlauben
         if (sentOffNames.has(fullName(selectedPlayer))) {
             resetAll();
             return;
@@ -96,7 +94,6 @@ export default function PlayerEventsClient({
     function confirmSub(playerIn: PlayerDTO) {
         if (!selectedPlayer) return;
 
-        // raus Spieler darf nicht gesperrt sein (sinnvoll) und rein Spieler ebenfalls nicht
         if (sentOffNames.has(fullName(selectedPlayer))) {
             resetAll();
             return;
@@ -134,7 +131,6 @@ export default function PlayerEventsClient({
 
     return (
         <div className="px-2 md:px-4 py-6">
-            {/* SPIELERLISTE */}
             {!selectedPlayer && (
                 <div className="grid grid-cols-2 gap-4 md:gap-8">
                     <div>
@@ -175,7 +171,6 @@ export default function PlayerEventsClient({
                 </div>
             )}
 
-            {/* ACTION SHEET */}
             {selectedPlayer && !isSubMode && (
                 <div className="max-w-sm mx-auto rounded-2xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden">
                     <div className="flex items-center gap-3 px-4 py-3 border-b">
@@ -209,7 +204,6 @@ export default function PlayerEventsClient({
                 </div>
             )}
 
-            {/* SUBSTITUTES PANEL */}
             {selectedPlayer && isSubMode && (
                 <div className="max-w-sm mx-auto rounded-2xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden">
                     <div className="flex items-center gap-3 px-4 py-3 border-b">
