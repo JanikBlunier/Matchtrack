@@ -24,7 +24,7 @@ type Action =
     | { type: "ADD_EVENT"; payload: MatchEvent }
     | { type: "CLEAR_EVENTS" };
 
-function reducer(state: State, action: Action): State {
+export function reducer(state: State, action: Action): State {
     switch (action.type) {
         case "ADD_EVENT": {
             const next = action.payload;
@@ -65,7 +65,7 @@ function uid() {
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function calculateScore(events: MatchEvent[]): Score {
+export function calculateScore(events: MatchEvent[]): Score {
     let home = 0;
     let away = 0;
 
