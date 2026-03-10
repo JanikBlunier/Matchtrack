@@ -43,6 +43,10 @@ export function GameTimerProvider({
 
 export function useGameTimerContext() {
     const ctx = useContext(GameTimerContext);
-    if (!ctx) throw new Error("useGameTimerContext must be used within GameTimerProvider");
+
+    if (!ctx) {
+        throw new Error("useGameTimerContext must be used within GameTimerProvider");
+    }
+
     return ctx;
 }
